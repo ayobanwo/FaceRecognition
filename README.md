@@ -1,1 +1,1 @@
-# FaceRecongnition
+# FaceRecognition App
