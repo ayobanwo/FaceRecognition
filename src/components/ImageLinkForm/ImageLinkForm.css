@@ -14,4 +14,7 @@ width: 50%;
 	.fback{
 		width: 90%;
 	}
+	button{
+		width: 40% !important;
+	}
 }
