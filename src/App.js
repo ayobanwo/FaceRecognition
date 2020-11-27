@@ -40,7 +40,7 @@ class App extends Component{
 				name : '',
 				email: '', 
 				password: '',
-				entries: 0,
+				entries: '',
 				joined: '' 
 			}
 		}
@@ -80,13 +80,28 @@ class App extends Component{
 		this.setState({input: event.target.value});
 	} 
 
-	onSubmit = () => {
+	onPictureSubmit = () => {
 		this.setState({imageUrl: this.state.input})
 		console.log('click')
 		app.models.predict(
 			Clarifai.FACE_DETECT_MODEL, 
 			this.state.input )
-		.then(response => this.displayFaceBox(this.calculateFaceLocation(response)))
+		.then(response => {
+			if(response){
+				fetch('http://localhost:3001/image' , {
+					method: 'put',
+					headers: {'Content-Type': 'application/json'},
+					body: JSON.stringify({ 
+						id: this.state.user.id
+					})
+				})
+				.then(response => response.json())
+				.then(count =>{
+					this.setState(Object.assign(this.state.user, {entries:count}))
+				} )
+			}
+			this.displayFaceBox(this.calculateFaceLocation(response));
+		})
 		.catch(err => console.log(err)); 
 	} 
 
@@ -108,28 +123,28 @@ class App extends Component{
 	        	 />
 	            <Navigation isSignedIn = {isSignedIn} onRouteChange = {this.onRouteChange} /> 
 	           	{( () => {
-	           	        switch (route) {
-	           	          case "home":   
-	           	          	return (
-	           	          		<div>	
-  						      		<Logo />
-  						      		<Rank />
-  						            <ImageLinkForm 
-  						            	onInputChange = {this.onInputChange} 
-  						            	onSubmit ={this.onSubmit} 
-  						            />
-  						            <FaceRecognition 
-  						            	box={box} 
-  						            	imageUrl={imageUrl} 
-  						            />
-  						        </div> 
-	           	          	);
-	           	          case "SignIn": 
-	           	          	return <SignIn  onRouteChange = {this.onRouteChange}/>;
-	           	          default:      
-	           	          return <Register loadUser={this.loadUser} onRouteChange = {this.onRouteChange}/>;
-	           	        }
-	           	    }
+           	        switch (route) {
+           	          case "home":   
+           	          	return (
+           	          		<div>	
+					      		<Logo />
+					      		<Rank  name={this.state.user.name} entries={this.state.user.entries}/>
+					            <ImageLinkForm 
+					            	onInputChange = {this.onInputChange} 
+					            	onPictureSubmit ={this.onPictureSubmit} 
+					            />
+					            <FaceRecognition 
+					            	box={box} 
+					            	imageUrl={imageUrl} 
+					            />
+					        </div> 
+           	          	);
+           	          case "SignIn": 
+           	          	return <SignIn loadUser = {this.loadUser} onRouteChange = {this.onRouteChange}/>;
+           	          default:      
+           	          return <Register loadUser={this.loadUser} onRouteChange = {this.onRouteChange}/>;
+           	        }
+	           	}
 	           	) ()}
 	       
 	        </div>
